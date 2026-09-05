@@ -59,5 +59,6 @@ Valid range is 1 through 3999 — the numerals the classical symbol set
 
 ## Status
 
-Early skeleton. Encoding and decoding both work; no test file has landed
-yet, and the CLI only takes a single positional argument.
+Early skeleton. Encoding and decoding both work and are covered by
+table-driven tests plus a full round-trip check over the entire valid
+range. The CLI still only takes a single positional argument.
