@@ -60,5 +60,6 @@ Valid range is 1 through 3999 — the numerals the classical symbol set
 ## Status
 
 Early skeleton. Encoding and decoding both work and are covered by
-table-driven tests plus a full round-trip check over the entire valid
-range. The CLI still only takes a single positional argument.
+table-driven tests, a full round-trip check over the entire valid range,
+and fuzz tests (`go test -fuzz=FuzzToRoman ./roman` /
+`-fuzz=FuzzFromRoman`) for inputs the tables don't enumerate.

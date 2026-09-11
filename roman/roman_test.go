@@ -1,6 +1,9 @@
 package roman
 
-import "testing"
+import (
+	"strings"
+	"testing"
+)
 
 func TestToRoman(t *testing.T) {
 	cases := []struct {
@@ -146,4 +149,59 @@ func TestRoundTrip(t *testing.T) {
 			t.Fatalf("round trip for %d produced %q -> %d", n, s, got)
 		}
 	}
+}
+
+// FuzzToRoman feeds arbitrary ints at ToRoman looking for a panic or a
+// result that FromRoman can't parse back to the same value. The exhaustive
+// TestRoundTrip above already covers the valid range; this is here for
+// inputs a table can't enumerate, and for out-of-range values that should
+// fail cleanly rather than crash.
+func FuzzToRoman(f *testing.F) {
+	for _, n := range []int{Min, Max, 0, -1, 4, 40, 400, 4000, 1994} {
+		f.Add(n)
+	}
+
+	f.Fuzz(func(t *testing.T, n int) {
+		s, err := ToRoman(n)
+		if err != nil {
+			if n >= Min && n <= Max {
+				t.Fatalf("ToRoman(%d) returned unexpected error: %v", n, err)
+			}
+			return
+		}
+		if n < Min || n > Max {
+			t.Fatalf("ToRoman(%d) = %q, want error for out-of-range input", n, s)
+		}
+
+		got, err := FromRoman(s)
+		if err != nil {
+			t.Fatalf("FromRoman(%q) (from ToRoman(%d)) returned error: %v", s, n, err)
+		}
+		if got != n {
+			t.Fatalf("round trip for %d produced %q -> %d", n, s, got)
+		}
+	})
+}
+
+// FuzzFromRoman feeds arbitrary strings at FromRoman looking for a panic,
+// and checks that anything it does accept re-encodes to itself (uppercased),
+// which is exactly the canonicality guarantee the package promises.
+func FuzzFromRoman(f *testing.F) {
+	for _, s := range []string{"IV", "MCMXCIV", "iiii", "IC", "", "MMMM", "XL"} {
+		f.Add(s)
+	}
+
+	f.Fuzz(func(t *testing.T, s string) {
+		n, err := FromRoman(s)
+		if err != nil {
+			return
+		}
+		canonical, err := ToRoman(n)
+		if err != nil {
+			t.Fatalf("ToRoman(%d) (from FromRoman(%q)) returned error: %v", n, s, err)
+		}
+		if canonical != strings.ToUpper(s) {
+			t.Fatalf("FromRoman(%q) = %d, but ToRoman(%d) = %q", s, n, n, canonical)
+		}
+	})
 }
